@@ -53,6 +53,7 @@ class DataCleaning:
         # print(set(read_user_data['address']))
         print(read_user_data['address'])
         print(read_user_data)
+        return read_user_data
         
 
         #print(read_user_data['email_address'])
