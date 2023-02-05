@@ -1,10 +1,12 @@
 # %%
 import pandas as pd
 from data_extraction import DataExtractor
+from database_utils import DatabaseConnector
 
 class DataCleaning:
     def __init__(self):
         self.extractor = DataExtractor()
+        self.connector = DatabaseConnector()
         
     
     def clean_user_data(self):
@@ -53,7 +55,9 @@ class DataCleaning:
         # print(set(read_user_data['address']))
         print(read_user_data['address'])
         print(read_user_data)
-        return read_user_data
+
+        user_table = self.connector.upload_to_db(read_user_data, 'dim_users')
+        return user_table
         
 
         #print(read_user_data['email_address'])
