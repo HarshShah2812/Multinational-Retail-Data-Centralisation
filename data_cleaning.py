@@ -1,5 +1,6 @@
 # %%
 import pandas as pd
+import numpy as np
 from data_extraction import DataExtractor
 from database_utils import DatabaseConnector
 from pandas.tseries.offsets import MonthEnd
@@ -78,6 +79,61 @@ class DataCleaning:
         # read_card_data.info()
         card_details_table = self.connector.upload_to_db(read_card_data, 'dim_card_details')
         return card_details_table
+
+    def clean_store_data(self):
+        store_data = self.extractor.retrieve_stores_data()
+        store_data.info()
+        store_data.set_index('index', drop = True, inplace = True)
+        store_data['address'] = store_data['address'].str.replace('\n', ' ')
+        store_data['address'] = store_data['address'].str.replace(',', '')
+        store_data['address'] = store_data['address'].str.upper()
+        # print(store_data.head(15))
+        # #print(store_data['address'])
+        # print(store_data['address'].describe())
+        # print(store_data[store_data['address'].duplicated()])
+        # print(store_data.iloc[[405]])
+        # print(store_data.iloc[[437]])
+        store_data.drop([405], inplace = True)
+        store_data.drop([437], inplace = True)
+        # print(store_data['address'].describe())
+        # print(store_data[store_data['address'].duplicated()])
+        # print(store_data.sort_values(by=['lat'], ascending = True))
+        store_data = store_data[~store_data['latitude'].str.contains("[a-zA-Z]").fillna(False)]
+        # print(store_data.sort_values(by=['lat'], ascending = True))
+        store_data['longitude'] = store_data['longitude'].replace({'N/A': None})
+        store_data['longitude'] = store_data['longitude'].astype(float)
+        # print(store_data.iloc[[447]])
+        store_data.reset_index(drop = True, inplace = True)
+        # print(store_data.tail(15))
+        # print(set(store_data['lat']))
+        store_data.drop(columns = ['lat'], inplace = True)
+        # print(store_data.head(15))
+        # print(store_data.describe())
+        # print(set(store_data['staff_numbers']))
+        store_data['staff_numbers'] = store_data['staff_numbers'].str.replace('[a-zA-Z]', '')
+        store_data['staff_numbers'] = store_data['staff_numbers'].astype(int)
+        # print(set(store_data['staff_numbers']))
+        store_data['opening_date'] = pd.to_datetime(store_data['opening_date']).dt.date
+        store_data['latitude'] = store_data['latitude'].astype(float)
+        #store_data['latitude'] = store_data['latitude'].apply(lambda x: np.round(x, 2))
+        # print(set(store_data['latitude']))
+        # print(set(store_data['opening_date']))
+        # print(set(store_data['store_type']))
+        # print(set(store_data['country_code']))
+        # print(set(store_data['continent']))
+        store_data['country_code'] = store_data['country_code'].replace({None: 'N/A'})
+        store_data['continent'] = store_data['continent'].replace({'eeEurope': 'Europe'})
+        store_data['continent'] = store_data['continent'].replace({'eeAmerica': 'America'})
+        store_data['continent'] = store_data['continent'].replace({None: 'N/A'})
+        # print(set(store_data['continent']))
+        store_data_table = self.connector.upload_to_db(store_data, 'dim_store_details')
+        return store_data_table
+       
+        
+        
+
+
+
         
 
 
@@ -117,6 +173,7 @@ class DataCleaning:
 
 if __name__ == "__main__":
     cleaner = DataCleaning()
-    cleaner.clean_user_data()
-    cleaner.clean_card_data()
+    # cleaner.clean_user_data()
+    # cleaner.clean_card_data()
+    cleaner.clean_store_data()
 # %%
