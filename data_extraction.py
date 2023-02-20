@@ -40,7 +40,7 @@ class DataExtractor:
             # store_number += 1
             store_data = requests.get(f'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/{store_number}', headers = headers)
             x = store_data.json()
-            print(x)
+            # print(x)
             df2 = pd.json_normalize(x)
             df = pd.concat([df, df2])
         
