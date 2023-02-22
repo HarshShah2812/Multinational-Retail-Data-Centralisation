@@ -4,6 +4,7 @@ import json
 import requests
 import tabula
 import boto3
+from urllib.request import urlopen
 
 class DataExtractor:
     
@@ -54,6 +55,16 @@ class DataExtractor:
         df = pd.read_csv(address)
         # print(df.head())
         return df
+    
+    def extract_from_json(self, address = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json'):
+        # json_file = requests.get(address)
+        # df = json_file.json()
+        # df = pd.json_normalize(json_file)
+        # response = urlopen(address)
+        # data_json = json.loads(response.read())
+        df = pd.read_json(address)
+        #print(df)
+        return df
 
 
 if __name__ == "__main__":
@@ -62,7 +73,8 @@ if __name__ == "__main__":
     # extractor.retrieve_pdf_data()
     # extractor.list_number_of_stores()
     # extractor.retrieve_stores_data()
-    extractor.extract_from_s3()
+    # extractor.extract_from_s3()
+    extractor.extract_from_json()
 
 
     
