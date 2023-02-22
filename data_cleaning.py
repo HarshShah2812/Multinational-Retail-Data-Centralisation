@@ -241,6 +241,7 @@ class DataCleaning:
         print(set(orders_data['product_code']))
         orders_data_table = self.connector.upload_to_db(orders_data, 'orders_table')
         return orders_data_table
+    
 
         
 
