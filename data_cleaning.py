@@ -4,6 +4,7 @@ import numpy as np
 from data_extraction import DataExtractor
 from database_utils import DatabaseConnector
 from pandas.tseries.offsets import MonthEnd
+import re
 
 class DataCleaning:
     def __init__(self):
@@ -129,7 +130,119 @@ class DataCleaning:
         store_data_table = self.connector.upload_to_db(store_data, 'dim_store_details')
         return store_data_table
        
+    def convert_product_weights(self):
+        product_data = self.extractor.extract_from_s3()
+        # print(set(product_data['weight']))
         
+        # print(product_data.iloc[[1779]])
+        # print(product_data.loc[product_data['weight'] == 'Z8ZTDGUZVU'])
+        product_data['unit'] =  product_data['weight'].str.replace('[0-9.,/-]+', '', regex = True)
+        product_data['weight'] =  product_data['weight'].str.replace('x', '-')
+        # print(set(product_data['weight']))
+        # print(product_data.loc[product_data['weight'] == '5 * 145g'])
+        product_data['weight'] =  product_data['weight'].str.replace('\s', '', regex = True)
+        product_data['weight'] =  product_data['weight'].str.replace(r'[a-zA-Z$]+', '', regex = True)
+        
+        df1 = pd.DataFrame(product_data['weight'])
+        # print(df1)
+        df1['weight1'] = df1['weight'].str.split("-").str[0].astype(float).round(2)
+        df1['weight2'] = df1['weight'].str.split("-").str[1].astype(float).round(2)
+        # print(df1)
+        # print(df1.iloc[[1690]])
+        # print(df1.iloc[[1701]])
+        # print(set(df1['weight2']))
+        df1['weight2'] = df1['weight2'].replace({np.nan : float(0)})
+        df1['weight1'] = df1['weight2'].apply(lambda x: x if x > 0 else 1) * df1['weight1']
+        product_data['weight'] = df1['weight1'].round(2)
+        # product_data['weight'] =  product_data['weight'].str.replace('[\d * \d]', float([\d * ).astype(float).round(2)
+        # print(product_data.iloc[[1690]])
+        # print(product_data.iloc[[1701]])
+        # #product_data['weight'] =  product_data['weight'].str.replace(r'\b\d+\s+', '', regex = True).astype(float).round(2)
+        # print(product_data.iloc[[1779]])
+        # print(product_data.iloc[[1133]])
+        # product_data['weight'] =  product_data['weight'].str.replace(r'\b.', '', regex = True)
+        #product_data['weight'] =  product_data['weight'].str.replace('[\b.]', '', regex = True) #.astype(float).round(3)
+        #product_data['weight'] =  product_data['weight'].str.extract('(\d+)').astype(float)
+        # print(set(product_data['unit']))
+        # print(set(product_data['weight']))
+        # print(product_data.sort_values(by=['weight'], ascending = False))
+        product_data['unit'] = product_data['unit'].replace({' x g': 'g'})
+        product_data['unit'] = product_data['unit'].replace({'g ': 'g'})
+        # print(set(product_data['unit']))
+        # print(product_data.iloc[[1690]])
+        # print(product_data.iloc[[1701]])
+        # print(set(product_data['weight']))
+        
+        product_data['weight'] = np.where(product_data['unit'] == 'g', product_data['weight']/1000, product_data['weight']).round(3)
+        product_data['weight'] = np.where(product_data['unit'] == 'ml', product_data['weight']/1000, product_data['weight']).round(3)
+        product_data['weight'] = np.where(product_data['unit'] == 'oz', product_data['weight']/35.274, product_data['weight']).round(3)
+        # print(set(product_data['weight']))
+        # print(product_data.iloc[[382]])
+        # print(product_data.loc[product_data['unit'] == 'g'])
+        # print(product_data.loc[product_data['unit'] == 'ml'])
+        # print(product_data.loc[product_data['unit'] == 'oz'])
+        # print(product_data.loc[product_data['weight'] == 35.5])
+
+        return product_data
+    
+    def clean_products_data(self):
+
+        product_data = self.convert_product_weights()
+        print(product_data.info())
+        product_data.rename({'Unnamed: 0': 'index'}, axis = 'columns', inplace = True)
+        product_data.set_index('index', drop = True, inplace = True)
+        product_data.rename({'weight': 'weight(kg)'}, axis = 'columns', inplace = True)
+        print(product_data['weight(kg)'])
+        print(product_data.info())
+        print(set(product_data['product_price']))
+        product_data['product_price'] = product_data['product_price'].str.replace('£', '')
+        print(set(product_data['product_price']))
+        product_data.rename({'product_price': 'product_price(£)'}, axis = 'columns', inplace = True)
+        print(product_data.sort_values(by = ['product_price(£)'], ascending = False))
+        product_data = product_data[~product_data['product_price(£)'].str.contains("[a-zA-Z]").fillna(False)]
+        product_data = product_data.dropna(axis = 0)
+        product_data.reset_index(drop = True, inplace = True)
+        product_data['product_price(£)'] = product_data['product_price(£)'].astype(np.float64).round(2)
+        print(set(product_data['product_price(£)']))
+        print(product_data.sort_values(by = ['product_price(£)'], ascending = False))
+        print(product_data.info())
+        product_data['category'] = product_data['category'].str.replace('-', ' ')
+        print(set(product_data['EAN']))
+        product_data['EAN'] = product_data['EAN'].astype(np.int64)
+        print(set(product_data['EAN']))
+        print(product_data.info())
+        print(set(product_data['date_added']))
+        product_data['date_added'] = pd.to_datetime(product_data['date_added']).dt.date
+        print(set(product_data['date_added']))
+        print(product_data.info())
+        print(set(product_data['removed']))
+        product_data['removed'] = product_data['removed'].str.replace('_', ' ')
+        print(set(product_data['product_code']))
+        product_data['product_code'] = product_data['product_code'].str.upper()
+        print(set(product_data['product_code']))
+        print(product_data.head(20))
+        print(set(product_data['category']))
+        product_data.drop(['unit'], axis = 1, inplace = True)
+        print(product_data.info())
+        print(product_data)
+        product_data_table = self.connector.upload_to_db(product_data, 'dim_products')
+        return product_data_table
+        # print(product_data['weight'].tail(50))
+
+    def clean_orders_data(self):
+        orders_data = self.extractor.read_rds_table("orders_table")
+        orders_data.info()
+        print(orders_data.head(15))
+        orders_data.set_index('level_0', drop = True, inplace = True)
+        orders_data.drop(['first_name', 'last_name', '1'], axis = 1, inplace = True)
+        orders_data.reset_index(drop = True, inplace = True)
+        print(orders_data.head(15))
+        orders_data['product_code'] = orders_data['product_code'].str.upper()
+        print(set(orders_data['product_code']))
+        orders_data_table = self.connector.upload_to_db(orders_data, 'orders_table')
+        return orders_data_table
+    
+
         
 
 
@@ -175,5 +288,8 @@ if __name__ == "__main__":
     cleaner = DataCleaning()
     # cleaner.clean_user_data()
     # cleaner.clean_card_data()
-    cleaner.clean_store_data()
+    #cleaner.clean_store_data()
+    #cleaner.convert_product_weights()
+    #cleaner.clean_products_data()
+    cleaner.clean_orders_data()
 # %%
