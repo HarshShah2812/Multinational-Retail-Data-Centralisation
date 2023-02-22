@@ -10,7 +10,7 @@ class DatabaseConnector:
     def __init__(self):
         #self.read_db_creds()
         #self.init_db_engine()
-        self.list_db_tables()
+        #self.list_db_tables()
         self.connection = psycopg2.connect(host = "localhost", database = "Sales_Data", user = "postgres", password = "Indiarule2_")
 
     def read_db_creds(self):
@@ -30,7 +30,7 @@ class DatabaseConnector:
         engine = self.init_db_engine()
         inspector = inspect(engine)
         list_tables = inspector.get_table_names()
-        #print(list_tables)
+        print(list_tables)
         return list_tables
 
     def upload_to_db(self, dataframe, table_name):
@@ -48,4 +48,5 @@ class DatabaseConnector:
 
 if __name__ == '__main__':
     database_connector = DatabaseConnector()
+    database_connector.list_db_tables()
 
