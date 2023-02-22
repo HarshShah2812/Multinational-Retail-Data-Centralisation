@@ -1,10 +1,11 @@
 # %%
 import pandas as pd
 import numpy as np
+from datetime import datetime
 from data_extraction import DataExtractor
 from database_utils import DatabaseConnector
 from pandas.tseries.offsets import MonthEnd
-import re
+
 
 class DataCleaning:
     def __init__(self):
@@ -242,7 +243,36 @@ class DataCleaning:
         orders_data_table = self.connector.upload_to_db(orders_data, 'orders_table')
         return orders_data_table
     
-
+    def clean_time_data(self):
+        time_data = self.extractor.extract_from_json()
+        time_data.info()
+        # sales_data['year'] = sales_data['year'].astype(np.int64)
+        
+        print(set(time_data['timestamp']))
+        print(set(time_data['month']))
+        print(set(time_data['year']))
+        print(set(time_data['day']))
+        time_data = time_data[~time_data['month'].str.contains('[a-zA-Z]').fillna(False)]
+        print(set(time_data['month']))
+        print(set(time_data['year']))
+        print(set(time_data['day']))
+        print(time_data.head(20))
+        time_data['timestamp'] = pd.to_datetime(time_data['timestamp']).dt.time
+        time_data['month'] = time_data['month'].astype(np.int64)
+        time_data['year'] = time_data['year'].astype(np.int64)
+        time_data['day'] = time_data['day'].astype(np.int64)
+        print(set(time_data['time_period']))
+        time_data['time_period'] = time_data['time_period'].str.replace('_', ' ')
+        print(set(time_data['time_period']))
+        print(time_data.head(20))
+        time_data.info()
+        time_data_table = self.connector.upload_to_db(time_data, 'dim_date_times')
+        return time_data_table
+        # print(set(sales_data['timestamp']))
+        # print(set(sales_data['date_uuid']))
+        
+        
+        
         
 
 
@@ -291,5 +321,6 @@ if __name__ == "__main__":
     #cleaner.clean_store_data()
     #cleaner.convert_product_weights()
     #cleaner.clean_products_data()
-    cleaner.clean_orders_data()
+    # cleaner.clean_orders_data()
+    cleaner.clean_time_data()
 # %%
