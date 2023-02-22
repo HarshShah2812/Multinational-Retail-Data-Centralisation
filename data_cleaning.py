@@ -229,7 +229,18 @@ class DataCleaning:
         return product_data_table
         # print(product_data['weight'].tail(50))
 
-
+    def clean_orders_data(self):
+        orders_data = self.extractor.read_rds_table("orders_table")
+        orders_data.info()
+        print(orders_data.head(15))
+        orders_data.set_index('level_0', drop = True, inplace = True)
+        orders_data.drop(['first_name', 'last_name', '1'], axis = 1, inplace = True)
+        orders_data.reset_index(drop = True, inplace = True)
+        print(orders_data.head(15))
+        orders_data['product_code'] = orders_data['product_code'].str.upper()
+        print(set(orders_data['product_code']))
+        orders_data_table = self.connector.upload_to_db(orders_data, 'orders_table')
+        return orders_data_table
 
         
 
@@ -278,5 +289,6 @@ if __name__ == "__main__":
     # cleaner.clean_card_data()
     #cleaner.clean_store_data()
     #cleaner.convert_product_weights()
-    cleaner.clean_products_data()
+    #cleaner.clean_products_data()
+    cleaner.clean_orders_data()
 # %%
