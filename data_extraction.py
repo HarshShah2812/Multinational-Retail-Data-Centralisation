@@ -3,6 +3,7 @@ from database_utils import DatabaseConnector
 import json
 import requests
 import tabula
+import boto3
 
 class DataExtractor:
     
@@ -48,14 +49,20 @@ class DataExtractor:
             # dfs = pd.concat([df, dfs])
         # print(df)
         return df
+    
+    def extract_from_s3(self, address = 's3://data-handling-public/products.csv'):
+        df = pd.read_csv(address)
+        # print(df.head())
+        return df
 
 
 if __name__ == "__main__":
     extractor = DataExtractor()
     # extractor.read_rds_table()
     # extractor.retrieve_pdf_data()
-    extractor.list_number_of_stores()
-    extractor.retrieve_stores_data()
+    # extractor.list_number_of_stores()
+    # extractor.retrieve_stores_data()
+    extractor.extract_from_s3()
 
 
     
