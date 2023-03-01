@@ -74,9 +74,9 @@ class DataCleaning:
         # print(read_card_data.isnull().sum())
         # print(read_card_data.isna().sum())
         # print(read_card_data)
-        read_card_data['expiry_date'] = pd.to_datetime(read_card_data['expiry_date'], format = '%m/%y', errors = 'ignore', infer_datetime_format = True)
-        read_card_data['expiry_date'] = read_card_data['expiry_date'] + MonthEnd(0)
-        read_card_data['expiry_date'] = read_card_data['expiry_date'].dt.date
+        # read_card_data['expiry_date'] = pd.to_datetime(read_card_data['expiry_date'], format = '%m/%y', errors = 'ignore', infer_datetime_format = True)
+        # read_card_data['expiry_date'] = read_card_data['expiry_date'] + MonthEnd(0)
+        # read_card_data['expiry_date'] = read_card_data['expiry_date'].dt.date
         read_card_data['date_payment_confirmed'] = pd.to_datetime(read_card_data['date_payment_confirmed']).dt.date
         # read_card_data.info()
         card_details_table = self.connector.upload_to_db(read_card_data, 'dim_card_details')
@@ -323,7 +323,7 @@ if __name__ == "__main__":
     # cleaner.clean_card_data()
     # cleaner.clean_store_data()
     #cleaner.convert_product_weights()
-    cleaner.clean_products_data()
+    # cleaner.clean_products_data()
     # cleaner.clean_orders_data()
     # cleaner.clean_time_data()
 # %%
