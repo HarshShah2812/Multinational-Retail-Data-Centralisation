@@ -113,12 +113,10 @@ class DataCleaning:
         product_data = product_data[~product_data['product_price'].str.contains("[a-zA-Z]").fillna(False)]
         product_data = product_data.dropna(axis = 0)
         product_data.reset_index(drop = True, inplace = True)
-        product_data['product_price'] = product_data['product_price'].astype(np.float64).round(2)
         print(set(product_data['product_price']))
         print(product_data.sort_values(by = ['product_price'], ascending = False))
         print(product_data.info())
         product_data['category'] = product_data['category'].str.replace('-', ' ')
-        product_data['EAN'] = product_data['EAN'].astype(np.int64)
         print(product_data.info())
         product_data['date_added'] = pd.to_datetime(product_data['date_added']).dt.date
         print(product_data.info())
@@ -128,7 +126,7 @@ class DataCleaning:
         product_data.drop(['unit'], axis = 1, inplace = True)
         print(product_data.info())
         print(product_data)
-        print(set)
+        print(set(product_data['product_code']))
         product_data_table = self.connector.upload_to_db(product_data, 'dim_products')
         return product_data_table
 
@@ -157,25 +155,22 @@ class DataCleaning:
         print(set(time_data['day']))
         print(time_data.head(20))
         time_data['timestamp'] = pd.to_datetime(time_data['timestamp']).dt.time
-        time_data['month'] = time_data['month'].astype(np.int64)
-        time_data['year'] = time_data['year'].astype(np.int64)
-        time_data['day'] = time_data['day'].astype(np.int64)
         print(set(time_data['time_period']))
         time_data['time_period'] = time_data['time_period'].str.replace('_', ' ')
         print(set(time_data['time_period']))
         print(time_data.head(20))
         time_data.info()
-        #print(set(time_data['date_uuid']))
-        # time_data_table = self.connector.upload_to_db(time_data, 'dim_date_times')
-        # return time_data_table
+        print(set(time_data['date_uuid']))
+        time_data_table = self.connector.upload_to_db(time_data, 'dim_date_times')
+        return time_data_table
         
 if __name__ == "__main__":
     cleaner = DataCleaning()
-    #cleaner.clean_user_data()
-    #cleaner.clean_card_data()
-    #cleaner.clean_store_data()
-    # cleaner.convert_product_weights()
-    # cleaner.clean_products_data()
-    # cleaner.clean_orders_data()
+    cleaner.clean_user_data()
+    cleaner.clean_card_data()
+    cleaner.clean_store_data()
+    cleaner.convert_product_weights()
+    cleaner.clean_products_data()
+    cleaner.clean_orders_data()
     cleaner.clean_time_data()
 # %%
