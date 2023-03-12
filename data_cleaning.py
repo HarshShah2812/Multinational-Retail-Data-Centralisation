@@ -38,8 +38,7 @@ class DataCleaning:
         return user_table
         
     def clean_card_data(self):
-        link = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf'
-        read_card_data = self.extractor.retrieve_pdf_data(link)
+        read_card_data = self.extractor.retrieve_pdf_data()
         read_card_data.info()
         read_card_data['date_payment_confirmed'] = pd.to_datetime(read_card_data['date_payment_confirmed']).dt.date
         card_details_table = self.connector.upload_to_db(read_card_data, 'dim_card_details')
