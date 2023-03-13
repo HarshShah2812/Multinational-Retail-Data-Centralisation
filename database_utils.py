@@ -9,20 +9,15 @@ from credentials import credentials
 class DatabaseConnector:
 
     def __init__(self):
-        #self.read_db_creds()
-        #self.init_db_engine()
-        #self.list_db_tables()
         self.connection = psycopg2.connect(host = credentials.get('host'), database = credentials.get('database'), user = credentials.get('user'), password = credentials.get('password'))
 
     def read_db_creds(self):
        with open ('db_creds.yaml', 'r') as creds:
         creds_loaded = yaml.safe_load(creds)
-        #print(creds_loaded)
         return creds_loaded
 
     def init_db_engine(self):
         creds_loaded = self.read_db_creds()
-        #engine = create_engine(f"{creds_loaded['Credentials']['DATABASE_TYPE']}+{creds_loaded[0]['DBAPI']}://{creds_loaded['RDS_USER']}:{creds_loaded['RDS_PASSWORD']}@{creds_loaded['RDS_HOST']}:{creds_loaded['RDS_PORT']}/{creds_loaded['RDS_DATABASE']}")
         engine = create_engine(f"{creds_loaded['DATABASE_TYPE']}+{creds_loaded['DBAPI']}://{creds_loaded['RDS_USER']}:{creds_loaded['RDS_PASSWORD']}@{creds_loaded['RDS_HOST']}:{creds_loaded['RDS_PORT']}/{creds_loaded['RDS_DATABASE']}")
         engine.connect()
         return engine
@@ -38,10 +33,8 @@ class DatabaseConnector:
         conn_string = f"postgresql://{credentials.get('user')}:{credentials.get('password')}@{credentials.get('host')}/{credentials.get('database')}"
         db = create_engine(conn_string)
         conn = db.connect()
-        conn1 = self.connection #psycopg2.connect(database = "Sales_Data", user = "postgres", password = "Indiarule2_", host = "localhost")
+        conn1 = self.connection
         conn1.autocommit = True
-        # cursor = conn1.cursor()
-        # cursor.execute('drop table if exists table')
         df = pd.DataFrame(dataframe)
         df_sql = df.to_sql(table_name, conn, if_exists = 'replace')
         return df_sql
