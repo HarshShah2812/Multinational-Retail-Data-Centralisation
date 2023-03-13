@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import inspect
 import yaml
 import psycopg2
+from credentials import credentials
 
 
 class DatabaseConnector:
@@ -11,7 +12,7 @@ class DatabaseConnector:
         #self.read_db_creds()
         #self.init_db_engine()
         #self.list_db_tables()
-        self.connection = psycopg2.connect(host = "localhost", database = "Sales_Data", user = "postgres", password = "Indiarule2_")
+        self.connection = psycopg2.connect(host = credentials.get('host'), database = credentials.get('database'), user = credentials.get('user'), password = credentials.get('password'))
 
     def read_db_creds(self):
        with open ('db_creds.yaml', 'r') as creds:
@@ -34,7 +35,7 @@ class DatabaseConnector:
         return list_tables
 
     def upload_to_db(self, dataframe, table_name):
-        conn_string = 'postgresql://postgres:Indiarule2_@localhost/Sales_Data'
+        conn_string = f"postgresql://{credentials.get('user')}:{credentials.get('password')}@{credentials.get('host')}/{credentials.get('database')}"
         db = create_engine(conn_string)
         conn = db.connect()
         conn1 = self.connection #psycopg2.connect(database = "Sales_Data", user = "postgres", password = "Indiarule2_", host = "localhost")
