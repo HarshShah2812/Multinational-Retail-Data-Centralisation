@@ -40,15 +40,15 @@ class DataCleaning:
         print(read_user_data['address'])
         print(read_user_data)
         read_user_data.info()
-        # user_table = self.connector.upload_to_db(read_user_data, 'dim_users')
-        # return user_table
+        user_table = self.connector.upload_to_db(read_user_data, 'dim_users')
+        return user_table
         
     def clean_card_data(self):
         read_card_data = self.extractor.retrieve_pdf_data()
         read_card_data.info()
         read_card_data['date_payment_confirmed'] = pd.to_datetime(read_card_data['date_payment_confirmed']).dt.date
-        # card_details_table = self.connector.upload_to_db(read_card_data, 'dim_card_details')
-        # return card_details_table
+        card_details_table = self.connector.upload_to_db(read_card_data, 'dim_card_details')
+        return card_details_table
 
     def clean_store_data(self):
         store_data = self.extractor.retrieve_stores_data()
@@ -95,8 +95,8 @@ class DataCleaning:
         print(set(store_data['continent']))
         # store_data['continent'] = store_data['continent'].replace({'eeEurope': 'Europe'})
         # store_data['continent'] = store_data['continent'].replace({'eeAmerica': 'America'})
-        store_data.at[0, 'country_code'] = None
-        store_data.at[0, 'continent'] = None
+        # store_data.at[0, 'country_code'] = None
+        # store_data.at[0, 'continent'] = None
         print(set(store_data['country_code']))
         store_data['staff_numbers'] = store_data['staff_numbers'].str.replace('[a-zA-Z]', '')
         store_data[['staff_numbers', 'longitude', 'latitude']] = store_data[['staff_numbers', 'longitude', 'latitude']].apply(lambda x: pd.to_numeric(x, errors='coerce').round(1))
@@ -116,6 +116,7 @@ class DataCleaning:
         store_data.info()
         print(store_data.head(20))
         print(store_data['opening_date'].head(20))
+        print(set(store_data['store_type']))
         # store_data_table = self.connector.upload_to_db(store_data, 'dim_store_details')
         # return store_data_table
        
@@ -164,26 +165,33 @@ class DataCleaning:
         
         product_data = product_data.rename(columns = {'EAN':'ean'})
         product_data['ean'] = product_data['ean'].apply(lambda x: str(x) if re.match('^[0-9]{12,13}$', str(x)) else np.nan)
-        
-        product_data['product_code'] = product_data['product_code'].apply(lambda x: x if re.match('^[a-zA-Z0-9]{2}-[0-9]{6,7}[a-zA-Z]$', str(x)) else np.nan)
-        print(set(product_data['product_price']))
-        print(product_data.sort_values(by = ['product_price'], ascending = False))
-        print(product_data.info())
-        print(set(product_data['category']))
+        print(set(product_data['product_code']))
+        print(product_data.iloc[1614])
+        print(product_data.iloc[1251])
+        print(product_data.iloc[1655])
+        product_data['product_code'] = product_data['product_code'].apply(lambda x: x if re.match('^[a-zA-Z0-9]{2}-[0-9]{5,7}[a-zA-Z]$', str(x)) else np.nan)
+        print(set(product_data['product_code']))
+        print(product_data.sort_values(by = ['product_code'], ascending = False))
+        # print(set(product_data['product_price']))
+        # print(product_data.sort_values(by = ['product_price'], ascending = False))
+        # print(product_data.info())
+        # print(set(product_data['category']))
         
         # product_data['category'] = product_data['category'].str.replace('-', ' ')
         # product_data['removed'] = product_data['removed'].str.replace('_', ' ')
-        print(product_data.head(20))
+        # print(product_data.head(20))
         # product_data['removed'] = product_data['removed'].replace({'Still_avaliable': 'Still_available'})
         product_data.drop(['unit'], axis = 1, inplace = True)
+        # print(product_data.info())
         product_data = product_data.drop(columns = 'Unnamed: 0')
         product_data = product_data.dropna(subset = ['product_code'])
         product_data = product_data.drop_duplicates().reset_index(drop = True)
         print(product_data.info())
-        print(product_data)
-        print(set(product_data['product_code']))
-        # product_data_table = self.connector.upload_to_db(product_data, 'dim_products')
-        # return product_data_table
+        print(product_data.sort_values(by = ['product_price'], ascending = False))
+        # print(product_data)
+        # print(set(product_data['product_code']))
+        product_data_table = self.connector.upload_to_db(product_data, 'dim_products')
+        return product_data_table
 
     def clean_orders_data(self):
         orders_data = self.extractor.read_rds_table("orders_table")
@@ -194,8 +202,8 @@ class DataCleaning:
         print(orders_data.head(15))
         print(set(orders_data['product_code']))
         orders_data.info()
-        # orders_data_table = self.connector.upload_to_db(orders_data, 'orders_table')
-        # return orders_data_table
+        orders_data_table = self.connector.upload_to_db(orders_data, 'orders_table')
+        return orders_data_table
     
     def clean_time_data(self):
         time_data = self.extractor.extract_from_json()
@@ -241,16 +249,16 @@ class DataCleaning:
         print(set(time_data['day']))
         print(set(time_data['time_period']))
         # print(set(time_data['date_uuid']))
-        # time_data_table = self.connector.upload_to_db(time_data, 'dim_date_times')
-        # return time_data_table
+        time_data_table = self.connector.upload_to_db(time_data, 'dim_date_times')
+        return time_data_table
         
 if __name__ == "__main__":
     cleaner = DataCleaning()
     # cleaner.clean_user_data()
     # cleaner.clean_card_data()
     # cleaner.clean_store_data()
-    cleaner.convert_product_weights()
-    cleaner.clean_products_data()
+    # cleaner.convert_product_weights()
+    # cleaner.clean_products_data()
     # cleaner.clean_orders_data()
-    # cleaner.clean_time_data()
+    cleaner.clean_time_data()
 # %%
