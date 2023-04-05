@@ -1,4 +1,4 @@
-select sum(p.product_price * o.product_quantity) total_sales, dt.month
+select round(sum(p.product_price * o.product_quantity)::numeric, 2) total_sales, dt.month
 from orders_table o
 left join dim_date_times dt
 on o.date_uuid = dt.date_uuid
