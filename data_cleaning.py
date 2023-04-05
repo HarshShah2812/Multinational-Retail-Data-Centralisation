@@ -5,7 +5,6 @@ from data_extraction import DataExtractor
 from database_utils import DatabaseConnector
 import re
 
-
 class DataCleaning:
     def __init__(self):
         self.extractor = DataExtractor()
