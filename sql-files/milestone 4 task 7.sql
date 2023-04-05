@@ -1,6 +1,5 @@
-select sum(staff_numbers) total_staff_numbers,
+select sum(staff_numbers) as total_staff_numbers,
 case 
-	-- when country_code = 'GB' or country_code = then 'GB'
 	when country_code = 'DE' then 'DE'
 	when country_code = 'US' then 'US'
 	else 'GB'
