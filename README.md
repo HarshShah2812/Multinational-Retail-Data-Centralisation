@@ -54,15 +54,6 @@ class DatabaseConnector:
         print(list_tables)
         return list_tables
 
-    def upload_to_db(self, dataframe, table_name):
-        conn_string = f"postgresql://{credentials.get('user')}:{credentials.get('password')}@{credentials.get('host')}/{credentials.get('database')}"
-        db = create_engine(conn_string)
-        conn = db.connect()
-        conn1 = self.connection
-        conn1.autocommit = True
-        df = pd.DataFrame(dataframe)
-        df_sql = df.to_sql(table_name, conn, if_exists = 'replace')
-        return df_sql
 ```
 In the data_extraction.py file, we create the `DataExtractor` class and the RDS table is read, with the help of SQLAlchemy, using the `read_rds_table` method, which will be used in the data_cleaning.py script.
 
@@ -121,4 +112,31 @@ def extract_from_json(self, address = 'https://data-handling-public.s3.eu-west-1
         print(df.head())
         return df
 ```
+## Data Cleaning
 
+> After extracting the data from various sources, we will now clean the data with the help of the Pandas library in the data_cleaning.py script.
+
+In the data_cleaning.py file, the `DataCleaning` class is created, and within the __init__ method of this class, the `DataExtraction` and `DatabaseConnector` methods are imported.
+
+In the subsequent methods of the `DataCleaning` class, the tables are cleaned with the Pandas library. Below is the `clean_products_data` method, which is used to clean the products table. We've used lambda functions numerous times to ensure that values in a given column meet the necessary criteria. We've also used `pd.to_datetime` to ensure that all values in the 'date_added' column are in the correct date format. For example, a value in that column may appear as a string i.e. '5 September 2005', therefore `pd.to_datetime` will convert the string to '2005/09/05', which is important for the dates to be able to be used in SQL. We've also performed other operations like removing £ signs from price values and dropping rows where values belonging to specific columns are NULL. This process is repeated for the other tables.
+
+```python
+def clean_products_data(self):
+        product_data = self.convert_product_weights()
+        valid_categories = ['homeware', 'toys-and-games', 'food-and-drink', 'pets', 'sports-and-leisure', 'health-and-beauty', 'diy']
+        product_data['category'] = product_data['category'].apply(lambda x: x if x in valid_categories else np.nan)
+        valid_availability = ['Still_avaliable', 'Removed']
+        product_data['removed'] = product_data['removed'].apply(lambda x: x if x in valid_availability else np.nan).replace('Still_avaliable', 'Still_available')
+        product_data['date_added'] = pd.to_datetime(product_data['date_added'], format='%Y-%m-%d', errors = 'coerce').dt.date
+        product_data['product_price'] = pd.to_numeric(product_data['product_price'].str.strip('£'), errors = 'coerce').round(2)
+        product_data['uuid'] = product_data['uuid'].apply(lambda x: x if re.match('^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', str(x)) else np.nan)
+        product_data = product_data.rename(columns = {'EAN':'ean'})
+        product_data['ean'] = product_data['ean'].apply(lambda x: str(x) if re.match('^[0-9]{12,13}$', str(x)) else np.nan)
+        product_data['product_code'] = product_data['product_code'].apply(lambda x: x if re.match('^[a-zA-Z0-9]{2}-[0-9]{5,7}[a-zA-Z]$', str(x)) else np.nan)
+        product_data.drop(['unit'], axis = 1, inplace = True)
+        product_data = product_data.drop(columns = 'Unnamed: 0')
+        product_data = product_data.dropna(subset = ['product_code'])
+        product_data = product_data.drop_duplicates().reset_index(drop = True)
+        product_data_table = self.connector.upload_to_db(product_data, 'dim_products')
+        return product_data_table
+```
