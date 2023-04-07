@@ -121,3 +121,4 @@ def extract_from_json(self, address = 'https://data-handling-public.s3.eu-west-1
         print(df.head())
         return df
 ```
+
