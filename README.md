@@ -16,9 +16,11 @@ Following the ETL (Extract, Transform, Load) principle, data is collected from v
     the date table.
 
 ## Data Extraction
+
 Here, we will be extracting data from various sources with the data_extraction.py script.
 
 ### AWS RDS
+
 Firstly, we connect to the AWS RDS database using SQLAlchemy in the database_utils.py file. Below you can see the code which shows the DatabaseConnector class from the database_utils.py file, containing the `init_db_engine` method which initialises the RDS engine, using login credentials stored in a yaml file. The `list_db_tables` method lists all the tables that are present in the RDS database that we are trying to access.
 
 ```python
@@ -61,4 +63,61 @@ class DatabaseConnector:
         df = pd.DataFrame(dataframe)
         df_sql = df.to_sql(table_name, conn, if_exists = 'replace')
         return df_sql
+```
+In the data_extraction.py file, we create the `DataExtractor` class and the RDS table is read, with the help of SQLAlchemy, using the `read_rds_table` method, which will be used in the data_cleaning.py script.
+
+```python
+import pandas as pd
+from database_utils import DatabaseConnector
+import requests
+import tabula
+import boto3
+
+class DataExtractor:
+    
+    def __init__(self):
+        self.connector = DatabaseConnector()
+       
+    def read_rds_table(self, table_name):
+        engine = self.connector.init_db_engine()
+        df = pd.read_sql_table(table_name, engine, index_col = 'index')
+        return df
+```
+### Extract from PDF
+
+The next set of data to extract are card details corresponding to the payments made for each order, which are stored inside a PDF file. The extraction will take place with the help of the Tabula library. As shown below, Tabula reads the PDF, which is then converted to a Pandas DataFrame. The head of the dataframe is then printed to ensure that the data has been extracted correctly.
+
+```python
+ def retrieve_pdf_data(self, link = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf'):
+        tab = tabula.read_pdf(link, pages = "all")
+        df = pd.DataFrame(tab[0])
+        print(df.head())
+        return df
+```
+
+### Extract from an API
+
+Now, we need need to extract the data for all the stores, which are found in an API(Application Programming Interface). Therefore, we use the Requests library to do this with the `requests.get` command, including headers, which in this case are the API keys necessary for accessing the API. We create 2 methods: `list_number_of_stores`, which returns the number of existing stores, and `retrieve_stores_data`, which returns the data for each of those stores with the help of a 'for' loop, within which the data is stored in separate JSON files, which are then stored in their own dataframes and are appended to the main dataframe using the `concat` function.
+
+### Extract from AWS S3
+
+Lastly, we need to extract data from an AWS S3 bucket. Below, you can see the csv file of the Products table, as well as the JSON file containing the date details corresponding to transactions. In order to access these files, we will use the boto3 library to interact with the S3 bucket. The bucket in question is defined, in this case, as `my_bucket`, and then the files are downloaded and converted into dataframes.
+
+```python
+def extract_from_s3(self, address = 's3://data-handling-public/products.csv'):
+        s3 = boto3.resource('s3')
+        my_bucket = s3.Bucket('data-handling-public')
+        my_bucket.download_file('products.csv', 'products.csv')
+        df = pd.read_csv('products.csv')
+        print(df.head())
+        return df
+```
+```python
+def extract_from_json(self, address = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json'):
+        s3 = boto3.resource('s3')
+        my_bucket = s3.Bucket('data-handling-public')
+        my_bucket.download_file('date_details.json', 'date_details.json')
+        df = pd.read_json('date_details.json')
+        print(df.head())
+        return df
 ```
