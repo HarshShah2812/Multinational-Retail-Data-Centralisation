@@ -1,6 +1,6 @@
 # Multinational Retail Data Centralisation
 
-This project involves being part of a multinational organisation whose data are spread across a range of sources, with the objective being extracting the data, cleaning it using the Pandas library and uploading it to a PostgreSQL database for querying. 
+> This project involves being part of a multinational organisation whose data are spread across a range of sources, with the objective being extracting the data, cleaning it using the Pandas library and uploading it to a PostgreSQL database for querying. 
 
 ## Summary
 
@@ -17,7 +17,7 @@ Following the ETL (Extract, Transform, Load) principle, data is collected from v
 
 ## Data Extraction
 
-Here, we will be extracting data from various sources with the data_extraction.py script.
+> Here, we will be extracting data from various sources with the data_extraction.py script.
 
 ### AWS RDS
 
