@@ -21,13 +21,13 @@ Here, we will be extracting data from various sources with the data_extraction.p
 ### AWS RDS
 Firstly, we connect to the AWS RDS database using SQLAlchemy in the database_utils.py file. Below you can see the code which shows the DatabaseConnector class from the database_utils.py file, containing the `init_db_engine` method which initialises the RDS engine, using login credentials stored in a yaml file. The `list_db_tables` method lists all the tables that are present in the RDS database that we are trying to access.
 
-`import pandas as pd
+```python
+import pandas as pd
 from sqlalchemy import create_engine 
 from sqlalchemy import inspect
 import yaml
 import psycopg2
 from credentials import credentials
-
 
 class DatabaseConnector:
 
@@ -60,4 +60,5 @@ class DatabaseConnector:
         conn1.autocommit = True
         df = pd.DataFrame(dataframe)
         df_sql = df.to_sql(table_name, conn, if_exists = 'replace')
-        return df_sql`
+        return df_sql
+```
