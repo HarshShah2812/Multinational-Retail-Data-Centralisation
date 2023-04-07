@@ -60,5 +60,4 @@ class DatabaseConnector:
         conn1.autocommit = True
         df = pd.DataFrame(dataframe)
         df_sql = df.to_sql(table_name, conn, if_exists = 'replace')
-        return df_sql
-`
+        return df_sql`
