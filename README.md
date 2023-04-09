@@ -140,3 +140,16 @@ def clean_products_data(self):
         product_data_table = self.connector.upload_to_db(product_data, 'dim_products')
         return product_data_table
 ```
+The cleaned data is sent to the PostgreSQL database with the help of SQLAlchemy via the `upload_to_db` method, which is derived from the `DatabaseConnector` class imported from database_utils.py. The method takes 2 arguments: The dataframe in question and the name we want to give the table when uploaded to the database. We have to connect to the database using credentials, specifically a 'user', 'password', 'host', 'database'. The code corresponding to the `upload_to_db` method can be found below:
+
+```python
+def upload_to_db(self, dataframe, table_name):
+        conn_string = f"postgresql://{credentials.get('user')}:{credentials.get('password')}@{credentials.get('host')}/{credentials.get('database')}"
+        db = create_engine(conn_string)
+        conn = db.connect()
+        conn1 = self.connection
+        conn1.autocommit = True
+        df = pd.DataFrame(dataframe)
+        df_sql = df.to_sql(table_name, conn, if_exists = 'replace')
+        return df_sql
+```
