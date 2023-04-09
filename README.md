@@ -227,3 +227,4 @@ on o.product_code = p.product_code
 group by dt.month
 order by total_sales desc limit 6;
 ```
+
