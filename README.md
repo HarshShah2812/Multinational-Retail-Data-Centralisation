@@ -153,3 +153,38 @@ def upload_to_db(self, dataframe, table_name):
         df_sql = df.to_sql(table_name, conn, if_exists = 'replace')
         return df_sql
 ```
+## Creating the database schema
+> Here, we will be casting all columns to the correct data types, so that when it comes to querying the tables to answe business questions, we will be able to compute the necessary aggregations, and the STAR-based schema can be created, using the columns in the orders table as the foreign keys.
+
+### Casting the columns
+
+Below, you can see a query that casts the columns of the products table to the correct data types, using `ALTER COLUMN`. It shows, for example, the product_price and weight columns being cast to floats in order for calculations to be performed correctly on them.
+
+```sql
+ALTER TABLE dim_products
+ALTER COLUMN product_price TYPE FLOAT USING product_price::float,
+ALTER COLUMN weight TYPE FLOAT USING weight::float,
+ALTER COLUMN "ean" TYPE VARCHAR(20) USING "ean"::varchar(20),
+ALTER COLUMN product_code TYPE VARCHAR(15) USING product_code::varchar(15),
+ALTER COLUMN date_added TYPE DATE USING date_added::date,
+ALTER COLUMN uuid TYPE uuid USING uuid::uuid,
+ALTER COLUMN still_available TYPE BOOL USING still_available::bool,
+ALTER COLUMN weight_class TYPE VARCHAR(20) USING weight_class::varchar(20)
+```
+We also add a new column called 'weight_class', using `ADD COLUMN`. The purpose of dding this column is to help the delivery team quickly make decisions on how to handle products based on their weight. We use the `CASE` function to assign human-readable values to the 'weight_class' column based on the values in the weight column.
+
+```sql
+ALTER TABLE dim_products
+ADD weight_class VARCHAR(20);
+
+UPDATE dim_products
+SET weight_class = 
+CASE WHEN weight < 3 THEN 'Light' 
+WHEN weight BETWEEN 3 AND 40 THEN 'Mid_Sized' 
+WHEN weight BETWEEN 41 and 140 THEN 'Heavy' 
+ELSE 'Truck_Required' 
+END;
+```
+### Adding the primary and foreign keys
+
+Finally, in order to finalise the STAR-based schema, we will add the primary keys to all the tables exluding the orders table (This will be the main reference table), as well as adding thee foreign keys to the orders table.
