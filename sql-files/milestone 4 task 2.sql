@@ -1,4 +1,4 @@
-select locality, count(store_code) total_no_stores
+select locality, count(store_code) as total_no_stores
 from dim_store_details
 group by locality
 order by total_no_stores desc limit 7;
