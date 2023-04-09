@@ -215,7 +215,7 @@ order by total_no_stores desc limit 7;
 
 ### Which months produce the most sales typically?
 
-Using the below query, the highest sales are produced in August while the lowest are produced in March. The query uses `LEFT JOIN` to connect the orders table to the date and products tables in such a way that the query will return all rows from the orders table and all the rows from the other 2 tables that match the condition. It uses the `SUM` aggregation to add up the multiplied values of the product quantity in the orders table and the product price in the products table, grouping the rows for each month using `GROUP BY`. We order the query by the sum of sales in the descending order, applying a limit of 6 rows this time.
+Using the below query, the highest sales are produced in August while the lowest are produced in March. The query uses `LEFT JOIN` to connect the orders table to the date and products tables in such a way that the query will return all rows from the orders table and all the rows from the other 2 tables that match the condition. It uses the `SUM` aggregation to add up the multiplied values of the product quantity in the orders table and the product price in the products table, grouping the rows for each month using `GROUP BY`. We order the query by the sum of sales in descending order, applying a limit of 6 rows this time.
 
 ```sql
 select round(sum(p.product_price * o.product_quantity)::numeric, 2) total_sales, dt.month
