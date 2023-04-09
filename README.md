@@ -188,3 +188,42 @@ END;
 ### Adding the primary and foreign keys
 
 Finally, in order to finalise the STAR-based schema, we will add the primary keys to all the tables exluding the orders table (This will be the main reference table), as well as adding thee foreign keys to the orders table.
+
+## Querying the tables
+
+### How many stores does the business have and in which countries?
+
+This SQL query shows the number of stores in each country. GB has the most with 265, then Germany with 141 and then the USA with 34. We use `COUNT(country_code)` to compute the number of rows that have country codes, as well as `GROUP BY` to group the number of stores for each country.
+
+```sql
+select country_code as country, count(country_code) as total_no_stores
+from dim_store_details
+group by country
+order by total_no_stores desc
+```
+
+### Which locations currently have the most stores?
+
+When running the following query, it can be concluded that Chapletown has the most stores with 14. The query follows similar principles to the previous query, however this time, we're using `ORDER BY` to order the rows from highest number of stores to lowest by also including `DESC`, and applying a limit of 7 so that only the first 7 locations with the highest number of stores are included.
+
+```sql
+select locality, count(store_code) as total_no_stores
+from dim_store_details
+group by locality
+order by total_no_stores desc limit 7;
+```
+
+### Which months produce the most sales typically?
+
+Using the below query, the highest sales are produced in August while the lowest are produced in March. The query uses `LEFT JOIN` to connect the orders table to the date and products tables in such a way that the query will return all rows from the orders table and all the rows from the other 2 tables that match the condition. It uses the `SUM` aggregation to add up the multiplied values of the product quantity in the orders table and the product price in the products table, grouping the rows for each month using `GROUP BY`. We order the query by the sum of sales in the descending order, applying a limit of 6 rows this time.
+
+```sql
+select round(sum(p.product_price * o.product_quantity)::numeric, 2) total_sales, dt.month
+from orders_table o
+left join dim_date_times dt
+on o.date_uuid = dt.date_uuid
+left join dim_products p
+on o.product_code = p.product_code
+group by dt.month
+order by total_sales desc limit 6;
+```
