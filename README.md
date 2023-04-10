@@ -154,6 +154,7 @@ def upload_to_db(self, dataframe, table_name):
         return df_sql
 ```
 ## Creating the database schema
+
 > Here, we will be casting all columns to the correct data types, so that when it comes to querying the tables to answe business questions, we will be able to compute the necessary aggregations, and the STAR-based schema can be created, using the columns in the orders table as the foreign keys.
 
 ### Casting the columns
@@ -196,10 +197,10 @@ Finally, in order to finalise the STAR-based schema, we will add the primary key
 This SQL query shows the number of stores in each country. GB has the most with 265, then Germany with 141 and then the USA with 34. We use `COUNT(country_code)` to compute the number of rows that have country codes, as well as `GROUP BY` to group the number of stores for each country.
 
 ```sql
-select country_code as country, count(country_code) as total_no_stores
-from dim_store_details
-group by country
-order by total_no_stores desc
+SELECT country_code AS country, count(country_code) AS total_no_stores
+FROM dim_store_details
+GROUP BY country
+ORDER BY total_no_stores DESC;
 ```
 
 ### Which locations currently have the most stores?
@@ -207,10 +208,10 @@ order by total_no_stores desc
 When running the following query, it can be concluded that Chapletown has the most stores with 14. The query follows similar principles to the previous query, however this time, we're using `ORDER BY` to order the rows from highest number of stores to lowest by also including `DESC`, and applying a limit of 7 so that only the first 7 locations with the highest number of stores are included.
 
 ```sql
-select locality, count(store_code) as total_no_stores
-from dim_store_details
-group by locality
-order by total_no_stores desc limit 7;
+SELECT locality, count(store_code) AS total_no_stores
+FROM dim_store_details
+GROUP BY locality
+ORDER BY total_no_stores DESC LIMIT 7;
 ```
 
 ### Which months produce the most sales typically?
@@ -218,13 +219,112 @@ order by total_no_stores desc limit 7;
 Using the below query, the highest sales are produced in August while the lowest are produced in March. The query uses `LEFT JOIN` to connect the orders table to the date and products tables in such a way that the query will return all rows from the orders table and all the rows from the other 2 tables that match the condition. It uses the `SUM` aggregation to add up the multiplied values of the product quantity in the orders table and the product price in the products table, grouping the rows for each month using `GROUP BY`. We order the query by the sum of sales in descending order, applying a limit of 6 rows this time.
 
 ```sql
-select round(sum(p.product_price * o.product_quantity)::numeric, 2) total_sales, dt.month
-from orders_table o
-left join dim_date_times dt
-on o.date_uuid = dt.date_uuid
-left join dim_products p
-on o.product_code = p.product_code
-group by dt.month
-order by total_sales desc limit 6;
+SELECT round(sum(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, dt.month
+FROM orders_table o
+LEFT JOIN dim_date_times dt
+ON o.date_uuid = dt.date_uuid
+LEFT JOIN dim_products p
+ON o.product_code = p.product_code
+GROUP BY dt.month
+ORDER BY total_sales DESC LIMIT 6;
+```
+### How many sales are coming from online?
+
+Running the query below shows that 26957 sales were made online, with 107739 products being sold. `CASE` is used to create a new column called 'location' to show if the store is Online or Offline based on their store type.
+
+```sql
+SELECT count(*) AS number_of_sales, sum(o.product_quantity) AS product_quantity_count,
+CASE 
+	WHEN store_type != 'Web Portal' THEN 'Offline'
+	ELSE 'Web'
+END AS location
+FROM orders_table o
+LEFT JOIN dim_products p
+ON o.product_code = p.product_code
+LEFT JOIN dim_store_details s
+ON o.store_code = s.store_code
+GROUP BY location;
+```
+### What percentage of sales come through each type of store?
+
+The query below provides the percentages of sales for each store type, with the local store type generating the most. We use `LEFT JOIN` for the same purpose as in the third query. Aggregations are used to find the total sales, while we use the percentage formula to calculate the percentage. We also use `ROUND` to round the total sales and percentages to 2 decimal places.
+
+```sql
+SELECT store_type, round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, 
+round(count(*) * 100/sum(count(*)) OVER ():: numeric, 2) AS percentage_total
+FROM orders_table o
+LEFT JOIN dim_store_details s
+ON o.store_code = s.store_code
+LEFT JOIN dim_products p
+ON o.product_code = p.product_code
+GROUP BY store_type
+ORDER BY total_sales DESC;
 ```
 
+### Which month in each year produced the most sales?
+
+The query below shows the total sales for each month for each year, which can be used to find the month with the highest sales for a given year. For example, we can see that the company's highest ever sales figures were generated in March 1994. This query uses the total sales found using the orders table when connected to the products table, using `LEFT JOIN`, while also being joined to the dates table to get the year and month columns, which which are the columns we will be grouping the data by.
+```sql
+SELECT round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, year, month
+FROM dim_products p
+LEFT JOIN orders_table o
+ON p.product_code = o.product_code
+LEFT JOIN dim_date_times dt
+ON o.date_uuid = dt.date_uuid
+GROUP BY year, month
+ORDER BY total_sales DESC LIMIT 10;
+```
+### What is our staff headcount?
+
+The query below shows the staff headcount for each country, from which it can be deduced that Great Britain has the highest number of staff. It uses `SUM` to add up the staff numbers for each country. We use the `CASE` function to ensure we get the correct staff counts for each of the countries, grouping the data by this new column.
+
+```sql
+SELECT sum(staff_numbers) AS total_staff_numbers,
+CASE
+	WHEN country_code = 'DE' THEN 'DE'
+	WHEN country_code = 'US' THEN 'US'
+	ELSE 'GB'
+END AS country_code
+FROM dim_store_details 
+GROUP BY country_code
+ORDER BY total_staff_numbers DESC;
+```
+
+### Which German store type is selling the most
+
+This query finds out which store type in Germany makes the most sales. It uses `SUM` to find the total sales using the orders table when joined to the products table, using `LEFT JOIN`. The orders table is also joined to the stores table so that we can group the data by the store type and country code, using `HAVING` to ensure that only German stores are selected. We also order the data by total sales in ascending order.
+
+```sql
+SELECT round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, store_type, country_code
+FROM orders_table o
+LEFT JOIN dim_products p
+ON o.product_code = p.product_code
+LEFT JOIN dim_store_details s
+ON o.store_code = s.store_code
+GROUP BY store_type, country_code
+HAVING country_code = 'DE'
+ORDER BY total_sales ASC;
+```
+### How quickly is the company making sales?
+
+The final query is used to find out how quickly the company is making sales. 
+
+Firstly, we use `WITH` to create a CTE(Common Table Expression), which acts as a temporary table, and within this table we will be concatenating the year, month and day with the timestamp and convert the result to a timestamp, as well as selecting the 'year' column from the dates table, and we'll call the resulting table 'CTE'; we'll then create another CTE and call it 'CTE1', which will use the columns from the previous CTE, as well as also having another column that uses the `LEAD` function; this function will allow us to compare the value of the present row with that of the next row that we choose to access data from, which in this case will be the following row after the present one, and is shown by using the digit 1 within the `LEAD` function; we will use `OVER` to define the set of records over which the `LEAD` function will be applied, and in this case we'll use the function to order the data by the timestamp values in descending order, and we'll call this column 'time_difference'. 
+
+Finally in the outer query, we'll select the 'year', as well as creating an aggregate function to find the average of the difference between the 'datetimes' and 'time_difference' columns and call it 'actual_time_taken'. We'll group the data by years so that the aggregate function is only applied to 'datetimes' values corresponding to the same year, as well as ordering the data by 'actual_time_taken' in descending order so that we can see the years in which sales are made more slowly at the top.
+
+```sql
+WITH cte AS(
+    SELECT TO_TIMESTAMP(CONCAT(year, '-', month, '-', day, ' ', timestamp), 'YYYY-MM-DD HH24:MI:SS') as datetimes, year FROM dim_date_times
+    ORDER BY datetimes DESC
+), cte2 AS(
+    SELECT 
+        year, 
+        datetimes, 
+        LEAD(datetimes, 1) OVER (ORDER BY datetimes DESC) as time_difference 
+        FROM cte
+) 
+SELECT year, AVG((datetimes - time_difference)) as actual_time_taken FROM cte2
+GROUP BY year
+ORDER BY actual_time_taken DESC;
+```
