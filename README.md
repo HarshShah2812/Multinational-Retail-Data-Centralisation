@@ -197,7 +197,7 @@ Finally, in order to finalise the STAR-based schema, we will add the primary key
 This SQL query shows the number of stores in each country. GB has the most with 265, then Germany with 141 and then the USA with 34. We use `COUNT(country_code)` to compute the number of rows that have country codes, as well as `GROUP BY` to group the number of stores for each country.
 
 ```sql
-SELECT country_code AS country, count(country_code) AS total_no_stores
+SELECT country_code AS country, COUNT(country_code) AS total_no_stores
 FROM dim_store_details
 GROUP BY country
 ORDER BY total_no_stores DESC;
@@ -208,7 +208,7 @@ ORDER BY total_no_stores DESC;
 When running the following query, it can be concluded that Chapletown has the most stores with 14. The query follows similar principles to the previous query, however this time, we're using `ORDER BY` to order the rows from highest number of stores to lowest by also including `DESC`, and applying a limit of 7 so that only the first 7 locations with the highest number of stores are included.
 
 ```sql
-SELECT locality, count(store_code) AS total_no_stores
+SELECT locality, COUNT(store_code) AS total_no_stores
 FROM dim_store_details
 GROUP BY locality
 ORDER BY total_no_stores DESC LIMIT 7;
@@ -219,7 +219,7 @@ ORDER BY total_no_stores DESC LIMIT 7;
 Using the below query, the highest sales are produced in August while the lowest are produced in March. The query uses `LEFT JOIN` to connect the orders table to the date and products tables in such a way that the query will return all rows from the orders table and all the rows from the other 2 tables that match the condition. It uses the `SUM` aggregation to add up the multiplied values of the product quantity in the orders table and the product price in the products table, grouping the rows for each month using `GROUP BY`. We order the query by the sum of sales in descending order, applying a limit of 6 rows this time.
 
 ```sql
-SELECT round(sum(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, dt.month
+SELECT ROUND(SUM(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, dt.month
 FROM orders_table AS o
 LEFT JOIN dim_date_times AS dt
 ON o.date_uuid = dt.date_uuid
@@ -233,7 +233,7 @@ ORDER BY total_sales DESC LIMIT 6;
 Running the query below shows that 26957 sales were made online, with 107739 products being sold. `CASE` is used to create a new column called 'location' to show if the store is Online or Offline based on their store type.
 
 ```sql
-SELECT count(*) AS number_of_sales, sum(o.product_quantity) AS product_quantity_count,
+SELECT COUNT(*) AS number_of_sales, SUM(o.product_quantity) AS product_quantity_count,
 CASE 
 	WHEN store_type != 'Web Portal' THEN 'Offline'
 	ELSE 'Web'
@@ -250,8 +250,8 @@ GROUP BY location;
 The query below provides the percentages of sales for each store type, with the local store type generating the most. We use `LEFT JOIN` for the same purpose as in the third query. Aggregations are used to find the total sales, while we use the percentage formula to calculate the percentage. We also use `ROUND` to round the total sales and percentages to 2 decimal places.
 
 ```sql
-SELECT store_type, round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, 
-round(count(*) * 100/sum(count(*)) OVER ():: numeric, 2) AS percentage_total
+SELECT store_type, ROUND(SUM(product_price * product_quantity)::numeric, 2) AS total_sales, 
+ROUND(COUNT(*) * 100/SUM(COUNT(*)) OVER ():: numeric, 2) AS percentage_total
 FROM orders_table AS o
 LEFT JOIN dim_store_details AS s
 ON o.store_code = s.store_code
@@ -265,7 +265,7 @@ ORDER BY total_sales DESC;
 
 The query below shows the total sales for each month for each year, which can be used to find the month with the highest sales for a given year. For example, we can see that the company's highest ever sales figures were generated in March 1994. This query uses the total sales found using the orders table when connected to the products table, using `LEFT JOIN`, while also being joined to the dates table to get the year and month columns, which which are the columns we will be grouping the data by.
 ```sql
-SELECT round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, year, month
+SELECT ROUND(SUM(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, dt.year, dt.month
 FROM dim_products AS p
 LEFT JOIN orders_table AS o
 ON p.product_code = o.product_code
@@ -315,7 +315,7 @@ Finally in the outer query, we'll select the 'year', as well as creating an aggr
 
 ```sql
 WITH cte AS(
-    SELECT TO_TIMESTAMP(CONCAT(year, '-', month, '-', day, ' ', timestamp), 'YYYY-MM-DD HH24:MI:SS') as datetimes, year 
+    SELECT TO_TIMESTAMP(CONCAT(year, '-', month, '-', day, ' ', timestamp), 'YYYY-MM-DD HH24:MI:SS') AS datetimes, year 
     FROM dim_date_times
     ORDER BY datetimes DESC
 ), 
@@ -323,10 +323,10 @@ cte2 AS(
     SELECT 
         year, 
         datetimes, 
-        LEAD(datetimes, 1) OVER (ORDER BY datetimes DESC) as time_difference 
+        LEAD(datetimes, 1) OVER (ORDER BY datetimes DESC) AS time_difference 
         FROM cte
 ) 
-SELECT year, AVG((datetimes - time_difference)) as actual_time_taken 
+SELECT year, AVG((datetimes - time_difference)) AS actual_time_taken 
 FROM cte2
 GROUP BY year
 ORDER BY actual_time_taken DESC;
