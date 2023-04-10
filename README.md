@@ -239,8 +239,6 @@ CASE
 	ELSE 'Web'
 END AS location
 FROM orders_table AS o
-LEFT JOIN dim_products AS p
-ON o.product_code = p.product_code
 LEFT JOIN dim_store_details AS s
 ON o.store_code = s.store_code
 GROUP BY location;
@@ -250,7 +248,7 @@ GROUP BY location;
 The query below provides the percentages of sales for each store type, with the local store type generating the most. We use `LEFT JOIN` for the same purpose as in the third query. Aggregations are used to find the total sales, while we use the percentage formula to calculate the percentage. We also use `ROUND` to round the total sales and percentages to 2 decimal places.
 
 ```sql
-SELECT store_type, ROUND(SUM(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, 
+SELECT s.store_type, ROUND(SUM(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, 
 ROUND(COUNT(*) * 100/SUM(COUNT(*)) OVER ():: numeric, 2) AS percentage_total
 FROM orders_table AS o
 LEFT JOIN dim_store_details AS s
