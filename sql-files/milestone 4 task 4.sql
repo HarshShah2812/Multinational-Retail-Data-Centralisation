@@ -1,11 +1,11 @@
-select count(*) number_of_sales, sum(o.product_quantity) product_quantity_count,
-case 
-	when store_type != 'Web Portal' then 'Offline'
-	else 'Web'
-end as location
-from orders_table o
-left join dim_products p
-on o.product_code = p.product_code
-left join dim_store_details s
-on o.store_code = s.store_code
-group by location;
+SELECT COUNT(*) AS number_of_sales, SUM(o.product_quantity) AS product_quantity_count,
+CASE 
+	WHEN store_type != 'Web Portal' THEN 'Offline'
+	ELSE 'Web'
+END AS location
+FROM orders_table AS o
+LEFT JOIN dim_products AS p
+ON o.product_code = p.product_code
+LEFT JOIN dim_store_details AS s
+ON o.store_code = s.store_code
+GROUP BY location;

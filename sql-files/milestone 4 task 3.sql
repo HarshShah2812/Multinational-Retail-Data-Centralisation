@@ -1,8 +1,8 @@
-select round(sum(p.product_price * o.product_quantity)::numeric, 2) total_sales, dt.month
-from orders_table o
-left join dim_date_times dt
-on o.date_uuid = dt.date_uuid
-left join dim_products p
-on o.product_code = p.product_code
-group by dt.month
-order by total_sales desc limit 6;
+SELECT ROUND(SUM(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, dt.month
+FROM orders_table AS o
+LEFT JOIN dim_date_times AS dt
+ON o.date_uuid = dt.date_uuid
+LEFT JOIN dim_products AS p
+ON o.product_code = p.product_code
+GROUP BY dt.month
+ORDER BY total_sales DESC LIMIT 6;

@@ -1,9 +1,9 @@
-select round(sum(product_price * product_quantity)::numeric, 2) total_sales, store_type, country_code
-from orders_table o
-left join dim_products p
-on o.product_code = p.product_code
-left join dim_store_details s
-on o.store_code = s.store_code
-group by store_type, country_code
-having country_code = 'DE'
-order by total_sales asc;
+SELECT ROUND(SUM(product_price * product_quantity)::numeric, 2) AS total_sales, s.store_type, s.country_code
+FROM orders_table AS o
+LEFT JOIN dim_products AS p
+ON o.product_code = p.product_code
+LEFT JOIN dim_store_details AS s
+ON o.store_code = s.store_code
+GROUP BY s.store_type, s.country_code
+HAVING s.country_code = 'DE'
+ORDER BY total_sales ASC;

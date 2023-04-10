@@ -1,4 +1,4 @@
-select country_code as country, count(country_code) as total_no_stores
-from dim_store_details
-group by country
-order by total_no_stores desc
+SELECT country_code AS country, COUNT(country_code) AS total_no_stores
+FROM dim_store_details
+GROUP BY country
+ORDER BY total_no_stores DESC;

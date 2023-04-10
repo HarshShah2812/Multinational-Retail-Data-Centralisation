@@ -1,9 +1,9 @@
-select store_type, round(sum(product_price * product_quantity)::numeric, 2) total_sales, 
-round(count(*) * 100/sum(count(*)) OVER ():: numeric, 2) percentage_total
-from orders_table o
-left join dim_store_details s
-on o.store_code = s.store_code
-left join dim_products p
-on o.product_code = p.product_code
-group by store_type
-order by total_sales desc
+SELECT store_type, ROUND(SUM(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, 
+ROUND(COUNT(*) * 100/SUM(COUNT(*)) OVER ():: numeric, 2) AS percentage_total
+FROM orders_table AS o
+LEFT JOIN dim_store_details AS s
+ON o.store_code = s.store_code
+LEFT JOIN dim_products AS p
+ON o.product_code = p.product_code
+GROUP BY store_type
+ORDER BY total_sales DESC;
