@@ -250,14 +250,14 @@ GROUP BY location;
 The query below provides the percentages of sales for each store type, with the local store type generating the most. We use `LEFT JOIN` for the same purpose as in the third query. Aggregations are used to find the total sales, while we use the percentage formula to calculate the percentage. We also use `ROUND` to round the total sales and percentages to 2 decimal places.
 
 ```sql
-SELECT store_type, ROUND(SUM(product_price * product_quantity)::numeric, 2) AS total_sales, 
+SELECT store_type, ROUND(SUM(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, 
 ROUND(COUNT(*) * 100/SUM(COUNT(*)) OVER ():: numeric, 2) AS percentage_total
 FROM orders_table AS o
 LEFT JOIN dim_store_details AS s
 ON o.store_code = s.store_code
 LEFT JOIN dim_products AS p
 ON o.product_code = p.product_code
-GROUP BY store_type
+GROUP BY s.store_type
 ORDER BY total_sales DESC;
 ```
 
@@ -279,7 +279,7 @@ ORDER BY total_sales DESC LIMIT 10;
 The query below shows the staff headcount for each country, from which it can be deduced that Great Britain has the highest number of staff. It uses `SUM` to add up the staff numbers for each country. We use the `CASE` function to ensure we get the correct staff counts for each of the countries, grouping the data by this new column.
 
 ```sql
-SELECT sum(staff_numbers) AS total_staff_numbers,
+SELECT SUM(staff_numbers) AS total_staff_numbers,
 CASE
 	WHEN country_code = 'DE' THEN 'DE'
 	WHEN country_code = 'US' THEN 'US'
@@ -295,7 +295,7 @@ ORDER BY total_staff_numbers DESC;
 This query finds out which store type in Germany makes the most sales. It uses `SUM` to find the total sales using the orders table when joined to the products table, using `LEFT JOIN`. The orders table is also joined to the stores table so that we can group the data by the store type and country code, using `HAVING` to ensure that only German stores are selected. We also order the data by total sales in ascending order.
 
 ```sql
-SELECT round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, store_type, country_code
+SELECT ROUND(SUM(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, s.store_type, s.country_code
 FROM orders_table AS o
 LEFT JOIN dim_products AS p
 ON o.product_code = p.product_code
