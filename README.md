@@ -220,10 +220,10 @@ Using the below query, the highest sales are produced in August while the lowest
 
 ```sql
 SELECT round(sum(p.product_price * o.product_quantity)::numeric, 2) AS total_sales, dt.month
-FROM orders_table o
-LEFT JOIN dim_date_times dt
+FROM orders_table AS o
+LEFT JOIN dim_date_times AS dt
 ON o.date_uuid = dt.date_uuid
-LEFT JOIN dim_products p
+LEFT JOIN dim_products AS p
 ON o.product_code = p.product_code
 GROUP BY dt.month
 ORDER BY total_sales DESC LIMIT 6;
@@ -238,10 +238,10 @@ CASE
 	WHEN store_type != 'Web Portal' THEN 'Offline'
 	ELSE 'Web'
 END AS location
-FROM orders_table o
-LEFT JOIN dim_products p
+FROM orders_table AS o
+LEFT JOIN dim_products AS p
 ON o.product_code = p.product_code
-LEFT JOIN dim_store_details s
+LEFT JOIN dim_store_details AS s
 ON o.store_code = s.store_code
 GROUP BY location;
 ```
@@ -252,10 +252,10 @@ The query below provides the percentages of sales for each store type, with the 
 ```sql
 SELECT store_type, round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, 
 round(count(*) * 100/sum(count(*)) OVER ():: numeric, 2) AS percentage_total
-FROM orders_table o
-LEFT JOIN dim_store_details s
+FROM orders_table AS o
+LEFT JOIN dim_store_details AS s
 ON o.store_code = s.store_code
-LEFT JOIN dim_products p
+LEFT JOIN dim_products AS p
 ON o.product_code = p.product_code
 GROUP BY store_type
 ORDER BY total_sales DESC;
@@ -266,10 +266,10 @@ ORDER BY total_sales DESC;
 The query below shows the total sales for each month for each year, which can be used to find the month with the highest sales for a given year. For example, we can see that the company's highest ever sales figures were generated in March 1994. This query uses the total sales found using the orders table when connected to the products table, using `LEFT JOIN`, while also being joined to the dates table to get the year and month columns, which which are the columns we will be grouping the data by.
 ```sql
 SELECT round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, year, month
-FROM dim_products p
-LEFT JOIN orders_table o
+FROM dim_products AS p
+LEFT JOIN orders_table AS o
 ON p.product_code = o.product_code
-LEFT JOIN dim_date_times dt
+LEFT JOIN dim_date_times AS dt
 ON o.date_uuid = dt.date_uuid
 GROUP BY year, month
 ORDER BY total_sales DESC LIMIT 10;
@@ -296,10 +296,10 @@ This query finds out which store type in Germany makes the most sales. It uses `
 
 ```sql
 SELECT round(sum(product_price * product_quantity)::numeric, 2) AS total_sales, store_type, country_code
-FROM orders_table o
-LEFT JOIN dim_products p
+FROM orders_table AS o
+LEFT JOIN dim_products AS p
 ON o.product_code = p.product_code
-LEFT JOIN dim_store_details s
+LEFT JOIN dim_store_details AS s
 ON o.store_code = s.store_code
 GROUP BY store_type, country_code
 HAVING country_code = 'DE'
