@@ -288,7 +288,7 @@ GROUP BY country_code
 ORDER BY total_staff_numbers DESC;
 ```
 
-### Which German store type is selling the most
+### Which German store type is selling the most?
 
 This query finds out which store type in Germany makes the most sales. It uses `SUM` to find the total sales using the orders table when joined to the products table, using `LEFT JOIN`. The orders table is also joined to the stores table so that we can group the data by the store type and country code, using `HAVING` to ensure that only German stores are selected. We also order the data by total sales in ascending order.
 
