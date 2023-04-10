@@ -4,7 +4,7 @@
 
 ## Summary
 
-Following the ETL (Extract, Transform, Load) principle, data is collected from various sources, cleaned and sent to a database. Tis process will be performed using three separate scripts available within this repo: database_utils.py, data_extraction.py and data_cleaning.py. The former will connect to an AWS RDS database, the second will extract the data from various sources (RDS tables, API's, S3 bucket etc.), and the latter will clean the data and load it to a database. Once uploaded to the database, the date types for each column will be changed to the correct types in order for the database to be fit for querying. 
+Following the ETL (Extract, Transform, Load) principle, data is collected from various sources, cleaned and sent to a database. This process will be performed using three separate scripts available within this repo: database_utils.py, data_extraction.py and data_cleaning.py. The former will connect to an AWS RDS database, the second will extract the data from various sources (RDS tables, API's, S3 bucket etc.), and the latter will clean the data and load it to a database. Once uploaded to the database, the date types for each column will be changed to the correct types in order for the database to be fit for querying. 
 
 6 different tables will be extracted and cleaned in this:
     
